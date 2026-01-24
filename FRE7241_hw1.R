@@ -24,7 +24,7 @@ bfloor <- 60
 coeff <- 2
 
 ## End of setup
-2222
+3333
 
 # 1. (20pts)
 # Simulate a stock-bond rebalancing strategy using CPPI 
