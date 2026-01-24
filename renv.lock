@@ -11,12 +11,12 @@
   "Packages": {
     "PerformanceAnalytics": {
       "Package": "PerformanceAnalytics",
-      "Version": "2.0.8-1",
-      "Source": "GitHub",
+      "Version": "2.0.8",
+      "Source": "Repository",
       "Type": "Package",
       "Title": "Econometric Tools for Performance and Risk Analysis",
       "Authors@R": "c( person(given=c(\"Brian\",\"G.\"),family=\"Peterson\",role=c(\"cre\",\"aut\",\"cph\"), email=\"brian@braverock.com\") , person(given=\"Peter\",family=\"Carl\",role=c(\"aut\",\"cph\"), email=\"peter@braverock.com\") , person(given=\"Kris\",family=\"Boudt\",role=c(\"ctb\",\"cph\")) , person(given=\"Ross\",family=\"Bennett\",role=\"ctb\") , person(given=\"Joshua\",family=\"Ulrich\",role=\"ctb\") , person(given=\"Eric\",family=\"Zivot\",role=\"ctb\") , person(given=\"Dries\",family=\"Cornilly\",role=\"ctb\") , person(given=\"Eric\",family=\"Hung\",role=\"ctb\") , person(given=\"Matthieu\",family=\"Lestel\",role=\"ctb\") , person(given=\"Kyle\",family=\"Balkissoon\",role=\"ctb\")   , person(given=\"Diethelm\",family=\"Wuertz\",role=\"ctb\")   , person(given=c(\"Anthony\",\"Alexander\"),family=\"Christidis\",role=\"ctb\")   , person(given=\"R. Douglas\",family=\"Martin\",role=\"ctb\")   , person(given=c(\"Zeheng\", \"Zenith\"),family=\"Zhou\",role=\"ctb\")   , person(given=c(\"Justin\", \"M.\"),family=\"Shea\",role=\"ctb\") , person(given=\"Dhairya\",family=\"Jain\",role=\"ctb\") )",
-      "Date": "2024-12-09",
+      "Date": "2024-12-04",
       "Description": "Collection of econometric functions for performance and risk  analysis. In addition to standard risk and performance metrics, this  package aims to aid practitioners and researchers in utilizing the latest research in analysis of non-normal return streams.  In general, it is most  tested on return (rather than price) data on a regular scale, but most  functions will work with irregular return data as well, and increasing numbers of functions will work with P&L or price data where possible.",
       "Imports": [
         "methods",
@@ -55,17 +55,12 @@
       "Encoding": "UTF-8",
       "LazyData": "true",
       "URL": "https://github.com/braverock/PerformanceAnalytics",
-      "Copyright": "(c) 2004-2024",
+      "Copyright": "(c) 2004-2022",
       "RoxygenNote": "7.3.2",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "PerformanceAnalytics",
-      "RemoteUsername": "braverock",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "515b0b5bf260ee0607aca60744207575181fa2b6",
       "NeedsCompilation": "yes",
       "Author": "Brian G. Peterson [cre, aut, cph], Peter Carl [aut, cph], Kris Boudt [ctb, cph], Ross Bennett [ctb], Joshua Ulrich [ctb], Eric Zivot [ctb], Dries Cornilly [ctb], Eric Hung [ctb], Matthieu Lestel [ctb], Kyle Balkissoon [ctb], Diethelm Wuertz [ctb], Anthony Alexander Christidis [ctb], R. Douglas Martin [ctb], Zeheng Zenith Zhou [ctb], Justin M. Shea [ctb], Dhairya Jain [ctb]",
-      "Maintainer": "Brian G. Peterson <brian@braverock.com>"
+      "Maintainer": "Brian G. Peterson <brian@braverock.com>",
+      "Repository": "CRAN"
     },
     "R6": {
       "Package": "R6",
@@ -908,7 +903,8 @@
       ],
       "License": "GPL (>= 2)",
       "NeedsCompilation": "yes",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     },
     "quantmod": {
       "Package": "quantmod",
@@ -1395,7 +1391,8 @@
       "NeedsCompilation": "yes",
       "Author": "Achim Zeileis [aut, cre] (ORCID: <https://orcid.org/0000-0003-0918-3766>), Gabor Grothendieck [aut], Jeffrey A. Ryan [aut], Joshua M. Ulrich [ctb], Felix Andrews [ctb]",
       "Maintainer": "Achim Zeileis <Achim.Zeileis@R-project.org>",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     }
   }
 }
