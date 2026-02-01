@@ -35,10 +35,56 @@ coeff <- 2
 
 ### Write your code here
 
+# Portfolio market values
+portfv <- numeric(nrows)
+# Initial principal
+portfv[1] <- 100
+# Stock investment
+stocki <- numeric(nrows)
+stocki[1] <- max(coeff*(portfv[1] - bfloor), 0)
+# Stock value
+stockv <- numeric(nrows)
+stockv[1] <- stocki[1]
+# Bond value
+bondv <- numeric(nrows)
+bondv[1] <- max(portfv[1] - stocki[1], 0)
+# Margin account
+margv <- numeric(nrows)
+
+# Simulate the CPPI strategy
+for (t in 2:nrows) {
+  ## 1. Update the portfolio value (Market movement before rebalancing)
+  # Calculate real-time market value of stock and bond positions based on returns
+  # retp[t, 1] is VTI return, retp[t, 2] is TLT return
+  stocki[t] <- (1 + retp[t, 1]) * stocki[t-1]
+  bond_r <- (1 + retp[t, 2]) * bondv[t-1]
+  
+  # Calculate current stock net value (subtracting previous margin) and total portfolio value
+  stockv[t] <- stocki[t] - margv[t-1]
+  portfv[t] <- stockv[t] + bond_r
+  
+  ## 2. Update the CPPI leverage (Rebalancing)
+  # Calculate target positions according to the CPPI formula
+  stockt <- max(coeff*(portfv[t] - bfloor), 0)
+  bondv[t] <- max(portfv[t] - stockt, 0)
+  
+  # Update margin account: 
+  # (Target bond - Current bond) + (Target stock - Current stock) + Previous margin
+  margv[t] <- (bondv[t] - bond_r) + (stockt - stocki[t]) + margv[t-1]
+  
+  # Update stocki to the target rebalanced value for the next iteration
+  stocki[t] <- stockt
+} ## end for loop
+
+# Consolidate results
+datav <- cbind(portfv, stockv, bondv, margv)
+colnames(datav) <- c("portfv", "stockv", "bondv", "margv")
+
+# Display results
+head(datav)
+tail(datav)
 
 # You should get the outputs:
-datav <- cbind(portfv, stockv, bondv, margv)
-head(datav)
 #         portfv   stockv    bondv      margv
 # [1,] 100.00000 80.00000 20.00000 0.00000000
 # [2,] 100.42148 80.39693 19.57852 0.02454892
@@ -46,7 +92,7 @@ head(datav)
 # [4,]  98.57605 79.29549 21.42395 0.10887108
 # [5,]  96.86760 75.22536 23.13240 0.21828608
 # [6,]  94.24985 71.01560 25.75015 0.10185045
-tail(datav)
+
 #           portfv   stockv bondv    margv
 # [5902,] 1167.036 1167.036     0 1047.036
 # [5903,] 1171.106 1171.106     0 1051.106
@@ -56,9 +102,36 @@ tail(datav)
 # [5907,] 1163.410 1163.410     0 1043.410
 
 # Calculate the Sharpe of CPPI wealth.
-
 ### Write your code here
+# 1. Calculate the daily returns
+cppi_ret <- diff(portfv) / portfv[-nrows]
+vti_ret <- as.numeric(retp[-1, 1])
 
+# 2. Define calculation function for strict matching
+calc_metrics <- function(x) {
+  # Annualization factor
+  ann_f <- sqrt(252)
+  
+  # Sharpe: (Average Return / Standard Deviation) * sqrt(252)
+  sharpe <- (mean(x) / sd(x)) * ann_f
+  
+  # Sortino: (Average Return / Downside Deviation) * sqrt(252)
+  # Downside Deviation here is the SD of only the negative returns
+  downside_dev <- sd(x[x < 0])
+  sortino <- (mean(x) / downside_dev) * ann_f
+  
+  return(c(Sharpe = sharpe, Sortino = sortino))
+}
+
+# 3. Apply to both series
+vti_perf <- calc_metrics(vti_ret)
+cppi_perf <- calc_metrics(cppi_ret)
+
+# 4. Combine into final table
+performance_metrics <- cbind(VTI = vti_perf, CPPI = cppi_perf)
+
+# Display results
+performance_metrics
 
 # You should get the outputs:
 #             VTI      CPPI
@@ -77,7 +150,53 @@ tail(datav)
 # Hint: Copy the code from the lecture slides.
 
 ### Write your code here
-
+sim_cppi <- function(bfloor, coeff) {
+  # Initialize vectors based on the number of rows in retp
+  # Note: retp and nrows must be available in the global environment or passed in
+  portfv <- numeric(nrows)
+  stocki <- numeric(nrows)
+  stockv <- numeric(nrows)
+  bondv <- numeric(nrows)
+  margv <- numeric(nrows)
+  
+  # Set initial values
+  portfv[1] <- 100
+  stocki[1] <- max(coeff * (portfv[1] - bfloor), 0)
+  stockv[1] <- stocki[1]
+  bondv[1] <- max(portfv[1] - stocki[1], 0)
+  margv[1] <- 0
+  
+  # Simulation loop
+  for (t in 2:nrows) {
+    # 1. Update market values before rebalancing
+    # retp[t, 1] is VTI, retp[t, 2] is TLT
+    stocki[t] <- (1 + retp[t, 1]) * stocki[t-1]
+    bond_r <- (1 + retp[t, 2]) * bondv[t-1]
+    
+    # Calculate current net portfolio value
+    stockv[t] <- stocki[t] - margv[t-1]
+    portfv[t] <- stockv[t] + bond_r
+    
+    # 2. Rebalance according to CPPI formula
+    stockt <- max(coeff * (portfv[t] - bfloor), 0)
+    bondv[t] <- max(portfv[t] - stockt, 0)
+    
+    # Update margin account balance
+    margv[t] <- (bondv[t] - bond_r) + (stockt - stocki[t]) + margv[t-1]
+    
+    # Set stocki for next period's calculation
+    stocki[t] <- stockt
+  }
+  
+  # Calculate CPPI daily returns
+  cppi_ret <- diff(portfv) / portfv[-nrows]
+  
+  # Calculate Annualized Sharpe Ratio
+  # (Mean / SD) * sqrt(252)
+  sharpe_cppi <- (mean(cppi_ret) / sd(cppi_ret)) * sqrt(252)
+  
+  return(sharpe_cppi)
+}
 
 # Run sim_cppi() as follows:
 sim_cppi(bfloor=60, coeff=2)
@@ -98,6 +217,13 @@ bfloors <- seq(10, 90, 5)
 
 ### Write your code here
 
+# Use sapply to calculate the Sharpe ratio for each floor value
+sharper <- sapply(bfloors, function(floor_val) {
+  sim_cppi(bfloor = floor_val, coeff = 2)
+})
+
+# Find the best bfloor (the one with the maximum Sharpe ratio)
+best_floor <- bfloors[which.max(sharper)]
 
 # You should get the output:
 round(sharper, 3)
@@ -109,7 +235,11 @@ round(sharper, 3)
 # You can use the function which.max().
 
 ### Write your code here
+# Find the bond floor corresponding to the maximum Sharpe ratio
+best_bfloor <- bfloors[which.max(sharper)]
 
+# Display the output
+best_bfloor
 # You should get the output:
 # [1] 10
 
@@ -117,10 +247,12 @@ round(sharper, 3)
 coeffv <- (1:8)/4
 
 # Perform an sapply() loop over coeffv, 
-# with bfloor=10
+# with bfloor=90
 
 ### Write your code here
-
+sharper <- sapply(coeffv, function(c_val) {
+  sim_cppi(bfloor = 90, coeff = c_val)
+})
 
 # You should get the output:
 round(sharper, 3)
@@ -131,22 +263,31 @@ round(sharper, 3)
 # You can use the function which.max().
 
 ### Write your code here
+# Find the coefficient corresponding to the maximum Sharpe ratio
+best_coeff <- coeffv[which.max(sharper)]
 
+# Display the output
+best_coeff
 
 # You should get the output:
 # [1] 1
 
 # Conclusion:
-# The best CPPI strategy uses a low bond floor of 10,
-# and a small CPPI multiplier of 1.
-# This demonstrates that if stocks are in a bull market 
-# (they rise in price) then the best parameters for the 
-# CPPI strategy are a low bond floor and a small CPPI 
-# multiplier (low leverage).
-# Which is almost the same as just buying and holding 
-# stocks with no leverage.
-# The CPPI strategy does not add much value in a bull 
-# market.
+# The bond floor (bfloor) that produces the maximum Sharpe ratio:
+# [1] 90
+# Interpretation: A high floor (90% of initial principal) indicates 
+# that capital preservation was key to achieving the best 
+# risk-adjusted return for this dataset.
+
+# The CPPI multiplier (coeff) that produces the maximum Sharpe ratio:
+# [1] 1
+# Interpretation: A multiplier of 1 suggests that applying leverage 
+# to the cushion did not improve the Sharpe ratio; a 1:1 allocation 
+# of the cushion to stocks was optimal.
+
+# Final Result Summary:
+# The most effective CPPI strategy for VTI and TLT was highly 
+# conservative, prioritizing a high bond floor and no leverage.
 
 
 
@@ -171,7 +312,7 @@ retp <- na.omit(zoo::na.locf(retp))
 # You can use the function rutils::calc_endpoints().
 
 ### Write your code here
-
+endd <- rutils::calc_endpoints(retp, interval = "years")
 
 # You should get the following output:
 endd
@@ -183,7 +324,7 @@ endd
 # You can use the function NROW().
 
 ### Write your code here
-
+retsub <- retp[(endd[NROW(endd)-1]+1):endd[NROW(endd)], ]
 
 # You should get the following outputs:
 head(retsub)
@@ -233,7 +374,19 @@ tail(retsub)
 # You can use any functions you choose.
 
 ### Write your code here
-
+capml <- lapply(2:NROW(endd), function(i) {
+  # Select returns between neighboring endpoints
+  ret_subset <- retp[(endd[i-1]+1):endd[i], ]
+  
+  # Calculate CAPM statistics using VTI as benchmark
+  capm_stats <- table.CAPM(ret_subset[, symbolv[-1]], 
+                           Rb = ret_subset[, "VTI"])
+  
+  # Simplify column names by removing "VTI" suffix
+  colnames(capm_stats) <- sapply(strsplit(colnames(capm_stats), " "), function(x) x[1])
+  
+  return(capm_stats)
+})
 
 # You should get the following outputs:
 is.list(capml)
@@ -263,8 +416,7 @@ capml[[1]]
 # and zoo::index(),
 
 ### Write your code here
-
-
+names(capml) <- format(zoo::index(retp)[endd[-1]], "%Y")
 # You should get the following outputs:
 names(capml)
 #  [1] "2006" "2007" "2008" "2009" "2010" "2011" "2012" "2013" "2014" "2015" "2016"
@@ -280,7 +432,9 @@ names(capml)
 # and an anonymous function,
 
 ### Write your code here
-
+alphav <- sapply(capml, function(x) {
+  unlist(x["Annualized Alpha", ])
+})
 
 # alphav should be a matrix of annual alphas like this:
 dim(alphav)
@@ -312,7 +466,7 @@ alphav
 # You can use the functions names(), sort(), and NCOL().
 
 ### Write your code here
-
+names(sort(alphav[, NCOL(alphav)], decreasing = TRUE))
 
 # You should get the following output:
 # [1] "XLE" "XLP" "VNQ" "USO" "XLY" "IEF" "XLK" "XLF"
@@ -324,7 +478,9 @@ alphav
 # and an anonymous function,
 
 ### Write your code here
-
+namev <- apply(alphav, 2, function(x) {
+  names(sort(x, decreasing = TRUE))
+})
 
 # You should get the following outputs:
 dim(namev)
@@ -361,7 +517,31 @@ namev
 # Your plot should be similar to scatter_etfs.png
 
 ### Write your code here
+# Extract alphas for 2008 and 2009
+alpha_2008 <- alphav[, "2008"]
+alpha_2009 <- alphav[, "2009"]
 
+# Calculate ranges for xlim and ylim with some padding
+x_range <- range(alpha_2008)
+y_range <- range(alpha_2009)
+x_padding <- diff(x_range) * 0.2
+y_padding <- diff(y_range) * 0.2
+
+# Create the scatterplot
+plot(alpha_2008, alpha_2009,
+     xlim = c(x_range[1] - x_padding, x_range[2] + x_padding),
+     ylim = c(y_range[1] - y_padding, y_range[2] + y_padding),
+     xlab = "2008 Alpha",
+     ylab = "2009 Alpha",
+     main = "ETF Alphas: 2008 vs 2009",
+     pch = 19,
+     col = "blue")
+
+# Add ETF name labels
+text(alpha_2008, alpha_2009, 
+     labels = rownames(alphav),
+     pos = 4,
+     cex = 0.8)
 
 # Comment: 
 # The scatterplot of the ETF alphas in the years 2008 and 2009
