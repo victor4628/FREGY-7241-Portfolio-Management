@@ -36,6 +36,7 @@
         "RcppArmadillo"
       ],
       "SystemRequirements": "GNU make, C++11",
+      "Remotes": "github::algoquant/rutils,",
       "VignetteBuilder": "knitr",
       "LazyData": "true",
       "ByteCompile": "true",
@@ -44,12 +45,12 @@
       "RoxygenNote": "7.3.3",
       "Encoding": "UTF-8",
       "RemoteType": "github",
-      "Remotes": "github::algoquant/rutils,",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "HighFreq",
       "RemoteUsername": "algoquant",
       "RemoteRef": "HEAD",
-      "RemoteSha": "cf11b1f44e16da054ab4ef6ed89115f7ff47ad2e"
+      "RemoteSha": "cf11b1f44e16da054ab4ef6ed89115f7ff47ad2e",
+      "NeedsCompilation": "yes"
     },
     "PerformanceAnalytics": {
       "Package": "PerformanceAnalytics",
@@ -1132,6 +1133,36 @@
       "Maintainer": "Winston Chang <winston@rstudio.com>",
       "Repository": "CRAN"
     },
+    "microbenchmark": {
+      "Package": "microbenchmark",
+      "Version": "1.5.0",
+      "Source": "Repository",
+      "Title": "Accurate Timing Functions",
+      "Description": "Provides infrastructure to accurately measure and compare the execution time of R expressions.",
+      "Authors@R": "c(person(\"Olaf\", \"Mersmann\", role=c(\"aut\")), person(\"Claudia\", \"Beleites\", role=c(\"ctb\")), person(\"Rainer\", \"Hurling\", role=c(\"ctb\")), person(\"Ari\", \"Friedman\", role=c(\"ctb\")), person(given=c(\"Joshua\",\"M.\"), family=\"Ulrich\", role=\"cre\", email=\"josh.m.ulrich@gmail.com\"))",
+      "URL": "https://github.com/joshuaulrich/microbenchmark/",
+      "BugReports": "https://github.com/joshuaulrich/microbenchmark/issues/",
+      "License": "BSD_2_clause + file LICENSE",
+      "Depends": [
+        "R (>= 3.2.0)"
+      ],
+      "Imports": [
+        "graphics",
+        "stats"
+      ],
+      "Suggests": [
+        "ggplot2",
+        "multcomp",
+        "RUnit"
+      ],
+      "SystemRequirements": "On a Unix-alike, one of the C functions mach_absolute_time (macOS), clock_gettime or gethrtime. If none of these is found, the obsolescent POSIX function gettimeofday will be tried.",
+      "ByteCompile": "yes",
+      "NeedsCompilation": "yes",
+      "Author": "Olaf Mersmann [aut], Claudia Beleites [ctb], Rainer Hurling [ctb], Ari Friedman [ctb], Joshua M. Ulrich [cre]",
+      "Maintainer": "Joshua M. Ulrich <josh.m.ulrich@gmail.com>",
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
+    },
     "mime": {
       "Package": "mime",
       "Version": "0.13",
@@ -1251,7 +1282,8 @@
       ],
       "License": "GPL (>= 2)",
       "NeedsCompilation": "yes",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     },
     "quantmod": {
       "Package": "quantmod",
@@ -1496,6 +1528,7 @@
       "Description": "Functions for managing object names and attributes, applying functions over lists, managing objects in environments.",
       "License": "MPL-2.0",
       "Depends": [
+        "R (>= 3.5.0)",
         "xts",
         "quantmod",
         "dygraphs"
@@ -1521,7 +1554,8 @@
       "RemoteRepo": "rutils",
       "RemoteUsername": "algoquant",
       "RemoteRef": "HEAD",
-      "RemoteSha": "b3d8b9aa8e73d51f7f367cc584ffbfa92d187780"
+      "RemoteSha": "b3d8b9aa8e73d51f7f367cc584ffbfa92d187780",
+      "NeedsCompilation": "no"
     },
     "sass": {
       "Package": "sass",
@@ -1894,7 +1928,8 @@
       "NeedsCompilation": "yes",
       "Author": "Achim Zeileis [aut, cre] (ORCID: <https://orcid.org/0000-0003-0918-3766>), Gabor Grothendieck [aut], Jeffrey A. Ryan [aut], Joshua M. Ulrich [ctb], Felix Andrews [ctb]",
       "Maintainer": "Achim Zeileis <Achim.Zeileis@R-project.org>",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     }
   }
 }
