@@ -31,16 +31,23 @@ uifun <- shiny::fluidPage(
   fluidRow(
     
     # Create number of bins for the histogram
-    
-    # Write your code here
+    column(width=3, 
+           sliderInput(inputId="nbins", 
+                       label="Number of bins:", 
+                       min=10, max=100, value=50, step=5)
+    ),  # end column
     
     # Input lambda decay parameter
-    
-    # Write your code here
+    column(width=3, 
+           sliderInput(inputId="lambdaf", 
+                       label="Lambda decay:", 
+                       min=0.01, max=0.99, value=0.9, step=0.01)
+    ),  # end column
     
     # Render the plot
-    
-    # Write your code here
+    column(width=6,
+           plotOutput("plotobj")
+    )  # end column
     
   ),  # end fluidRow
   
@@ -59,13 +66,17 @@ servfun <- function(input, output) {
     cat("Calculating the z-scores\n")
     
     # Get model parameters from input argument
+    lambdaf <- input$lambdaf
     
     # Calculate the z-scores
     # Use the function HighFreq::run_var() to calculate the
     # EMA variance.
+    volp <- HighFreq::run_var(pricev, lambdaf=lambdaf)
+    pricema <- volp[, 1]  # EMA price
+    volp <- sqrt(volp[, 2])  # EMA volatility
     
-    # Write your code here
-    
+    # Calculate z-scores
+    (pricev - pricema)/volp
     
   })  # end z-scores
   
@@ -73,9 +84,19 @@ servfun <- function(input, output) {
   # Plot the data
   output$plotobj <- shiny::renderPlot({
     cat("Plotting the z-scores\n")
-
-    # Write your code here
-
+    
+    # Get z-scores and number of bins
+    zscoresv <- zscores()
+    nbins <- input$nbins
+    
+    # Create histogram
+    hist(zscoresv, breaks=nbins, 
+         main="Distribution of Price Z-scores",
+         xlab="Z-scores", 
+         ylab="Frequency",
+         col="lightblue",
+         border="white")
+    
   })  # end renderPlot
   
 }  # end servfun
