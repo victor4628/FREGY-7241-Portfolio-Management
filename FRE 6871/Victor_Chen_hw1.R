@@ -1,0 +1,335 @@
+#################################
+### FRE6871 Homework #1 due at 6PM Monday February 2
+#################################
+# Max score 150pts
+
+# Please write in this file the R code needed to perform the tasks below, 
+# rename it to your_name_hw1.R
+# and upload the file to Brightspace
+
+
+############## Part I
+# Summary: Perform for() and sapply() loops over a vector,
+# and then perform the equivalent vectorized operations
+# over the vector, and measure the increase in speed.
+
+# First create a vector of random numbers as follows:
+
+set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+vecv <- sample(1:10)
+
+# You should get the following output:
+vecv
+# [1]  1  6  9  5  4  3  8  2 10  7
+
+
+# 1. (20pts)
+# Perform a for() loop to replace those elements 
+# of vecv that are greater than "5" with the 
+# number "5".
+# You can use the functions for() and seq_along(),
+
+### Write your code here
+for (i in seq_along(vecv)) {
+  if (vecv[i] > 5) {
+    vecv[i] <- 5
+  }
+}
+
+# You should get the following output:
+vecv
+# [1] 1 5 5 5 4 3 5 2 5 5
+
+
+# 2. (20pts) 
+# Perform exactly the same calculations as in p.1. using 
+# an sapply() loop.
+# You must use either functions apply() lapply(), or sapply().
+# You can also use the functions NROW() and seq_along(),
+# and an anonymous function.
+# This is an example of sapply() with an anonymous function:
+
+sapply(vecv, function(x) (x^2))
+
+# Run this code first
+set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+vecv <- sample(1:10)
+
+### Write your code here
+sapply(vecv, function(x) {
+  if (x > 5) {
+    return(5)
+  } else {
+    return(x)
+  }
+}) -> vecv
+
+# 3. (20pts) 
+# Perform the same calculations as in p.1, but only 
+# using vectorized operations (logical operators and 
+# subsetting).
+# You cannot use any for() or apply() loops.
+
+# Run this code first
+set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+vecv <- sample(1:10)
+
+### Write your code here
+vecv[vecv > 5] <- 5
+
+# 4. (20pts) 
+# Perform the same calculations as in p.1, but using 
+# the function ifelse().
+# You cannot use any for() or apply() loops.
+# You must use the function ifelse().
+
+# Run this code first
+set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+vecv <- sample(1:10)
+
+### Write your code here
+vecv <- ifelse(vecv > 5, 5, vecv)
+
+# 5. (10pts) 
+# Benchmark the CPU time used by the code from p.2 with 
+# the code from p.3, using the function microbenchmark().
+# Assign the names "sapply" and "vectorized" to each method.
+
+library(microbenchmark)
+
+### Write your code here
+microbenchmark(
+  sapply = {
+    set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+    vecv <- sample(1:10)
+    sapply(vecv, function(x) {
+      if (x > 5) {
+        return(5)
+      } else {
+        return(x)
+      }
+    }) -> vecv
+  },
+  vectorized = {
+    set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+    vecv <- sample(1:10)
+    vecv[vecv > 5] <- 5
+  }
+)
+# You should get output similar to this:
+#          expr    mean median
+# 1     sapply 500114.9  39099
+# 2 vectorized   3910.4   2933
+
+
+############## Part II
+# Summary: Calculate the optimal tilt parameter for 
+# the importance sampling of CVaR.
+
+## Run the setup code below.
+
+nsimu <- 1e3 # Number of simulation steps
+nboot <- 100 # Number of bootstrap simulations
+varisk <- -2 # VaR quantile
+lambdaf <- -1.5 # Tilt parameter
+
+# Calculate a matrix of random data
+set.seed(1121, "Mersenne-Twister", sample.kind="Rejection")
+datav <- matrix(rnorm(nboot*nsimu), ncol=nboot)
+
+## End of setup code.
+
+
+# 1. (20pts)
+# Create a function called boot_cvar(), which
+# performs bootstrap simulation, and calculates
+# the standard error of CVaR, using importance 
+# sampling.
+# 
+# The function boot_cvar() should accept two 
+# arguments:
+#   lambdaf = tilt parameter,
+#   varisk = VaR value.
+# The CVaR value corresponds to the VaR value.
+# 
+# Hint: adapt the code from the slides:
+#  Calculating CVaR Using Importance Sampling
+#  The Optimal Tilt Parameter for Importance Sampling
+
+### Write your code here
+boot_cvar <- function(lambdaf, varisk) {
+  nsimu <- nrow(datav)
+  nboot <- ncol(datav)
+  
+  cvar_boot <- numeric(nboot)
+  
+  for (j in 1:nboot) {
+    data_j <- datav[, j]
+    
+    # Calculate weights
+    weights <- exp(-lambdaf * data_j - 0.5 * lambdaf^2)
+    
+    # Calculate the tilted losses
+    tilted_losses <- data_j + lambdaf
+    
+    # Calculate the indicator function
+    indicator <- ifelse(tilted_losses <= varisk, 1, 0)
+    
+    # Calculate CVaR for this bootstrap sample
+    cvar_boot[j] <- sum(tilted_losses * weights * indicator) / sum(weights * indicator)
+  }
+  
+  # Calculate and return the standard error of CVaR
+  stderr_cvar <- sd(cvar_boot)
+  return(stderr_cvar)
+}
+# Call boot_cvar() to check that it works correctly.
+# You should get output similar to this:
+boot_cvar(lambdaf, varisk)
+# [1] 0.01615007
+
+# Define a vector of tilt parameters:
+lambdav <- seq(-3.0, -1.2, by=0.2)
+
+
+# Perform an sapply() loop over the vector lambdav 
+# and call the function boot_cvar().
+
+### Write your code here
+stderr <- sapply(lambdav, function(lambdaf) boot_cvar(lambdaf, varisk))
+
+# You should get output similar to this:
+stderr
+# [1] 0.01804857 0.01675801 0.01603641 0.01449753 0.01463759 0.01542356 0.01541681
+# [8] 0.01621652 0.01719773 0.02536473
+
+# Plot the lambdav and the standard deviation 
+# of CVaR stderr using plot().
+
+### Write your code here
+plot(lambdav, stderr, type="b", 
+     xlab="Tilt Parameter (lambda)", 
+     ylab="Standard Deviation of CVaR", 
+     main="Standard Deviation of CVaR vs Tilt Parameter")
+
+# Your plot should be similar to boot_tilt_cvar.png
+
+# The plot shows that the optimal tilt parameter
+# which minimizes the standard deviation of CVaR
+# is close to the varisk value.
+
+# Calculate the optimal tilt parameter which
+# minimizes the standard deviation of CVaR.
+# You can use the function which.min().
+
+### Write your code here
+opt_index <- which.min(stderr)
+lambopt <- lambdav[opt_index]
+# You should get output similar to this:
+lambopt
+# [1] -2.4
+
+# The optimal tilt parameter is close to the 
+# varisk value.
+
+
+# 2. (20pts)
+# Create a function called boot_cvar2(), which
+# performs the same bootstrap simulation as 
+# boot_cvar(), but only using vectorized operations, 
+# without using for() or sapply() loops.
+# Hint: use the function colSums().
+
+### Write your code here
+boot_cvar2 <- function(lambdaf, varisk) {
+  nsimu <- nrow(datav)
+  nboot <- ncol(datav)
+  
+  # Calculate weights for all bootstrap samples
+  weights <- exp(-lambdaf * datav - 0.5 * lambdaf^2)
+  
+  # Calculate the tilted losses for all bootstrap samples
+  tilted_losses <- datav + lambdaf
+  
+  # Calculate the indicator function for all bootstrap samples
+  indicator <- ifelse(tilted_losses <= varisk, 1, 0)
+  
+  # Calculate CVaR for all bootstrap samples
+  cvar_boot <- colSums(tilted_losses * weights * indicator) / colSums(weights * indicator)
+  
+  # Calculate and return the standard error of CVaR
+  stderr_cvar <- sd(cvar_boot)
+  return(stderr_cvar)
+}
+
+# Call boot_cvar() and boot_cvar2() to check that 
+# they give the same results.
+# You should get the output:
+all.equal(boot_cvar(lambdaf, varisk), 
+          boot_cvar2(lambdaf, varisk))
+# [1] TRUE
+
+
+# Benchmark the CPU times used by boot_cvar() and 
+# boot_cvar2(), using the function microbenchmark().
+
+library(microbenchmark)
+
+### Write your code here
+benchmark_results <- microbenchmark(
+  boot_cvar = boot_cvar(lambdaf, varisk),
+  boot_cvar2 = boot_cvar2(lambdaf, varisk)
+)
+
+# You should get output similar to the following:
+print(benchmark_results)
+#         expr     mean   median
+# 1  boot_cvar 2.087663 1.802524
+# 2 boot_cvar2 1.964523 1.255420
+
+# This shows that boot_cvar2() is slightly faster
+# than boot_cvar() because it avoids loops.
+
+
+# 3. (20pts)
+# Define a vector of VaR values:
+
+varv <- seq(-2.7, -0.8, by=0.2)
+
+# Calculate the optimal tilt parameters for the 
+# vector of VaR values.
+# Perform an sapply() loop over the vector varvv, 
+# and for each VaR value, calculate the optimal 
+# tilt parameter.
+# You must use the function boot_cvar2().
+# Hint: You should call boot_cvar2() inside a 
+# second sapply() loop.
+
+### Write your code here
+lambopt <- sapply(varv, function(varisk) {
+  lambdav <- seq(-3.0, -1.2, by=0.2)
+  stderr <- sapply(lambdav, function(lambdaf) boot_cvar2(lambdaf, varisk))
+  opt_index <- which.min(stderr)
+  return(lambdav[opt_index])
+})
+
+
+# You should get output similar to this:
+lambopt
+# [1] -3.0 -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.2 -1.2 -1.4
+
+# Plot the varv and lambopt using plot().
+
+### Write your code here
+plot(varv, lambopt, type="b", 
+     xlab="VaR Value", 
+     ylab="Optimal Tilt Parameter (lambda)", 
+     main="Optimal Tilt Parameter vs VaR Value")
+
+# Your plot should be similar to boot_tilt_cvar_opt.png
+
+# The plot shows that the optimal tilt parameter
+# is more negative (more tilting is needed) with
+# a more negative VaR value (higher confidence level).
+
+
