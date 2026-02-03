@@ -36,7 +36,6 @@
         "RcppArmadillo"
       ],
       "SystemRequirements": "GNU make, C++11",
-      "Remotes": "github::algoquant/rutils,",
       "VignetteBuilder": "knitr",
       "LazyData": "true",
       "ByteCompile": "true",
@@ -45,12 +44,12 @@
       "RoxygenNote": "7.3.3",
       "Encoding": "UTF-8",
       "RemoteType": "github",
+      "Remotes": "github::algoquant/rutils,",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "HighFreq",
       "RemoteUsername": "algoquant",
       "RemoteRef": "HEAD",
-      "RemoteSha": "cf11b1f44e16da054ab4ef6ed89115f7ff47ad2e",
-      "NeedsCompilation": "yes"
+      "RemoteSha": "cf11b1f44e16da054ab4ef6ed89115f7ff47ad2e"
     },
     "PerformanceAnalytics": {
       "Package": "PerformanceAnalytics",
@@ -1252,8 +1251,7 @@
       ],
       "License": "GPL (>= 2)",
       "NeedsCompilation": "yes",
-      "Repository": "CRAN",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "quantmod": {
       "Package": "quantmod",
@@ -1498,7 +1496,6 @@
       "Description": "Functions for managing object names and attributes, applying functions over lists, managing objects in environments.",
       "License": "MPL-2.0",
       "Depends": [
-        "R (>= 3.5.0)",
         "xts",
         "quantmod",
         "dygraphs"
@@ -1524,8 +1521,7 @@
       "RemoteRepo": "rutils",
       "RemoteUsername": "algoquant",
       "RemoteRef": "HEAD",
-      "RemoteSha": "b3d8b9aa8e73d51f7f367cc584ffbfa92d187780",
-      "NeedsCompilation": "no"
+      "RemoteSha": "b3d8b9aa8e73d51f7f367cc584ffbfa92d187780"
     },
     "sass": {
       "Package": "sass",
@@ -1898,8 +1894,7 @@
       "NeedsCompilation": "yes",
       "Author": "Achim Zeileis [aut, cre] (ORCID: <https://orcid.org/0000-0003-0918-3766>), Gabor Grothendieck [aut], Jeffrey A. Ryan [aut], Joshua M. Ulrich [ctb], Felix Andrews [ctb]",
       "Maintainer": "Achim Zeileis <Achim.Zeileis@R-project.org>",
-      "Repository": "CRAN",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     }
   }
 }
