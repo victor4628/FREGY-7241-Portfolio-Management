@@ -34,7 +34,7 @@ uifun <- shiny::fluidPage(
     column(width=3, 
            sliderInput(inputId="nbins", 
                        label="Number of bins:", 
-                       min=10, max=100, value=50, step=5)
+                       min=10, max=200, value=50, step=1)
     ),  # end column
     
     # Input lambda decay parameter
