@@ -59,7 +59,9 @@ sum(weightv*crossi)/npaths
 # up below the barl.
 
 ### Write your code here
-
+crossi <- (colSums(pathm > barl) > 0)
+belowl <- (pathm[nsteps, ] < barl)
+sum(crossi & belowl)/npaths
 
 # You should get the output:
 # [1] 0.021
@@ -68,7 +70,9 @@ sum(weightv*crossi)/npaths
 # paths patht.
 
 ### Write your code here
-
+crossi <- (colSums(patht > barl) > 0)
+belowl <- (patht[nsteps, ] < barl)
+sum(weightv * crossi * belowl)/npaths
 
 # You should get the output:
 # [1] 0.01960079
@@ -103,7 +107,27 @@ library(parallel)  # Load the package parallel
 ncores <- detectCores() - 1  # Number of cores
 
 ### Write your code here
+cluster <- makeCluster(ncores)
+clusterSetRNGStream(cluster, 1121)
+clusterExport(cluster, varlist=c("pathm", "patht", "weightv", "barl", "nsteps", "npaths"))
 
+bootd <- parSapply(cluster, 1:nboots, function(x) {
+  sampv <- sample.int(npaths, replace=TRUE)
+  pathm_b <- pathm[, sampv]
+  patht_b <- patht[, sampv]
+  weightv_b <- weightv[sampv]
+  # Naive MC
+  crossi <- (colSums(pathm_b > barl) > 0)
+  belowl <- (pathm_b[nsteps, ] < barl)
+  naivemc <- sum(crossi & belowl)/npaths
+  # Importance sampling
+  crossi <- (colSums(patht_b > barl) > 0)
+  belowl <- (patht_b[nsteps, ] < barl)
+  importmc <- sum(weightv_b * crossi * belowl)/npaths
+  c(naivemc=naivemc, importmc=importmc)
+})  # end parSapply
+
+stopCluster(cluster)
 
 # You should get the output:
 dim(bootd)
@@ -114,7 +138,7 @@ dim(bootd)
 # estimates of the crossing probability.
 
 ### Write your code here
-
+apply(bootd, MARGIN=1, function(x) c(mean=mean(x), stderr=sd(x)))
 
 # You should get output similar to this:
 #          naivemc     importmc
@@ -182,6 +206,28 @@ threshv <- qnorm(probv)
 # number generator.
 
 ### Write your code here
+calc_var <- function(threshv, lgd=0.6, rhov, nsimu=1000, confl=0.95) {
+  nbonds <- NROW(threshv)
+  # Pre-calculate random numbers outside the loop
+  sysv <- rnorm(nsimu)
+  idiosync <- matrix(rnorm(nsimu*nbonds), ncol=nsimu)
+  # Loop over rhov values
+  varcvar <- sapply(rhov, function(rho) {
+    rhos <- sqrt(rho)
+    rhosm <- sqrt(1 - rho)
+    assetm <- t(rhos*sysv + t(rhosm*idiosync))
+    lossv <- lgd*colSums(assetm < threshv)/nbonds
+    varisk <- quantile(lossv, confl)
+    cvar <- mean(lossv[lossv > varisk])
+    c(var=varisk, cvar=cvar)
+  })  # end sapply
+  # Create output vector
+  varv <- varcvar[1, ]
+  cvarv <- varcvar[2, ]
+  names(varv) <- paste0("var", seq_along(rhov))
+  names(cvarv) <- paste0("cvar", seq_along(rhov))
+  c(varv, cvarv)
+}  # end calc_var
 
 # Run calc_var() as follows:
 
@@ -228,6 +274,10 @@ cluster <- makeCluster(ncores)
 clusterSetRNGStream(cluster, 1121)
 
 ### Write your code here
+clusterExport(cluster, varlist=c("calc_var", "threshv", "lgd", "rhov", "nsimu", "confl"))
+bootd <- parLapply(cluster, 1:nboot, function(x) {
+  calc_var(threshv=threshv, lgd=lgd, rhov=rhov, nsimu=nsimu, confl=confl)
+})  # end parLapply
 
 # stop R processes over cluster
 stopCluster(cluster)
@@ -238,12 +288,15 @@ stopCluster(cluster)
 # function mclapply().
 
 ### Write your code here
-
+# bootd <- mclapply(1:nboot, function(x) {
+#   calc_var(threshv=threshv, lgd=lgd, rhov=rhov, nsimu=nsimu, confl=confl)
+# }, mc.cores=ncores)  # end mclapply
 
 # Bind the bootstrap list into a matrix.
 # You can use the functions rutils::do_call() and rbind().
 
 ### Write your code here
+bootd <- rutils::do_call(rbind, bootd)
 
 # You should get output similar to the following:
 round(head(bootd), 3)
@@ -261,7 +314,8 @@ round(head(bootd), 3)
 # You can use the functions apply(), mean(), and sd().
 
 ### Write your code here
-
+varsd <- apply(bootd[, 1:5], MARGIN=2, function(x) c(mean=mean(x), stderror=sd(x)))
+cvarsd <- apply(bootd[, 6:10], MARGIN=2, function(x) c(mean=mean(x), stderror=sd(x)))
 
 # You should get output similar to the following:
 round(varsd, 3)
@@ -279,7 +333,8 @@ round(cvarsd, 3)
 # by dividing them by their means.
 
 ### Write your code here
-
+varsds <- varsd["stderror", ] / varsd["mean", ]
+cvarsds <- cvarsd["stderror", ] / cvarsd["mean", ]
 
 # Plot the scaled standard errors of VaR and CVaR.
 # You should use the functions plot(), lines(), and legend().
@@ -289,5 +344,13 @@ round(cvarsd, 3)
 # correlation, because the distribution of losses becomes wider.
 
 ### Write your code here
-
+plot(x=rhov, y=varsds, t="l", lwd=2,
+  ylim=range(c(varsds, cvarsds)),
+  xlab="correlation", ylab="standard error",
+  main="Scaled Standard Errors of CVaR and VaR
+  vs Correlation")
+lines(x=rhov, y=cvarsds, lwd=2, col="red")
+legend(x="topleft", legend=c("CVaR", "VaR"), bty="n",
+  title=NULL, inset=0.05, cex=1.0, bg="white",
+  lwd=6, lty=1, col=c("red", "black"))
 
