@@ -74,6 +74,12 @@ rated <- rutils::diffit(ratev)
 # First method: Use the function lm()
 
 ### Write your code here
+formulav <- rated ~ retlag
+regmod <- lm(formulav)
+coeff <- summary(regmod)$coefficients
+sigmav <- sd(regmod$residuals)
+thetav <- -coeff[2, 1]
+muv <- coeff[1, 1] / thetav
 
 
 # You should get the following outputs:
@@ -84,11 +90,20 @@ c(sigma=round(sigmav, 4), theta=round(thetav, 4), muv=round(muv, 4))
 # Second method: Use only the functions cov() and var().
 # Calculate regression alpha and beta directly
 # using R code, without using the function lm().
+datav <- na.omit(cbind(rated, retlag))
+x1 <- as.numeric(datav[, 1])
+x2 <- as.numeric(datav[, 2])
+betac <- cov(x1, x2) / var(x2)
+alphac <- mean(x1) - betac * mean(x2)
+residv <- x1 - alphac - betac * x2
+sigmav <- sd(residv)
+thetav <- -betac
+muv <- alphac / thetav
 
 # You should get the following outputs:
 c(sigma=round(sigmav, 4), theta=round(thetav, 4), muv=round(muv, 4))
-#  sigma  theta  muv 
-# 0.0789 0.0003 4.9549 
+#  sigma  theta  muv
+# 0.0789 0.0003 4.9549
 
 
 # 3. (10pts)
@@ -98,6 +113,12 @@ c(sigma=round(sigmav, 4), theta=round(thetav, 4), muv=round(muv, 4))
 # drop(), substr(), as.numeric(), order(), and sort().
 
 ### Write your code here
+ycnow <- eapply(ratesenv, xts::last)
+ycnow <- do.call(cbind, ycnow)
+tauv <- as.numeric(substr(colnames(ycnow), start=4, stop=11))
+ordv <- order(tauv)
+tauv <- tauv[ordv]
+ycnow <- drop(coredata(ycnow[, ordv]))
 
 
 # You should get the following outputs:
@@ -116,6 +137,13 @@ ycnow
 # the vector of maturities tauv.
 
 ### Write your code here
+calc_yieldc <- function(ratet, muv, thetav, sigmav, tauv) {
+  B <- (1 - exp(-thetav*tauv))/thetav
+  A <- (muv - sigmav^2/(2*thetav^2))
+  A <- A*(B - tauv) - (sigmav^2*B^2)/(4*thetav)
+  ycurve <- (-A + B*ratet)/tauv
+  return(ycurve)
+}
 
 
 # You should get the following output:
@@ -133,6 +161,13 @@ calc_yieldc(ratet, muv, thetav, sigmav, tauv)
 # and the vector of market yields ycnow.
 
 ### Write your code here
+objfun <- function(params, ratet, tauv, ycnow) {
+  muv <- params[1]
+  thetav <- params[2]
+  sigmav <- params[3]
+  ycurve <- calc_yieldc(ratet, muv, thetav, sigmav, tauv)
+  sum((ycnow - ycurve)^2)
+}
 
 
 # You should get the following output:
@@ -147,6 +182,17 @@ objfun(c(muv, thetav, sigmav), ratet, tauv, ycnow)
 library(DEoptim)
 
 ### Write your code here
+optiml <- DEoptim::DEoptim(fn=objfun,
+  ratet=ratet,
+  tauv=tauv,
+  ycnow=ycnow,
+  lower=c(0, 0, 0),
+  upper=c(30, 10, 10),
+  control=DEoptim.control(trace=FALSE, storepopfrom=1, itermax=500))
+paroptim <- optiml$optim$bestmem
+muv <- paroptim[1]
+thetav <- paroptim[2]
+sigmav <- paroptim[3]
 
 
 # You should get outputs similar to:
@@ -161,9 +207,16 @@ all.equal(ycnow, ycurve, check.attributes=FALSE)
 
 # Plot the actual yield curve and the Vasicek DEoptim fit.
 # You can use the functions matplot() and legend().
-# Your plot should be similar to vasicek_rate_fit.png 
+# Your plot should be similar to vasicek_rate_fit.png
 
 ### Write your code here
+colorv <- c("blue", "red")
+matplot(tauv, cbind(ycnow, ycurve),
+  type="l", lty=1, lwd=3, col=colorv,
+  main="Actual Yield Curve and Vasicek DEoptim Fit",
+  xlab="Maturity (years)", ylab="Yield (%)")
+legend("bottomright", legend=c("Actual", "Vasicek"),
+  bty="n", col=colorv, lty=1, lwd=6, inset=0.05, cex=1.0)
 
 
 
