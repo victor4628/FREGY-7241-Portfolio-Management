@@ -44,7 +44,7 @@ plot(tauv, ycurve, type="l", lwd=3, col="blue",
 # Load constant maturity Treasury rates
 # Download the file from the share drive:
 # https://drive.google.com/drive/folders/1abep6n9Jgx4IPhMKXbpYZHAySgLXq1SS
-load(file="/Users/jerzy/Develop/lecture_slides/data/rates_data.RData")
+load(file=here::here("Data", "rates_data.RData"))
 
 # Set the short rate to the 1-year Treasury yields:
 ratev <- ratesenv$DGS1 # Time series of 1-year Treasury yields
@@ -190,9 +190,9 @@ optiml <- DEoptim::DEoptim(fn=objfun,
   upper=c(30, 10, 10),
   control=DEoptim.control(trace=FALSE, storepopfrom=1, itermax=500))
 paroptim <- optiml$optim$bestmem
-muv <- paroptim[1]
-thetav <- paroptim[2]
-sigmav <- paroptim[3]
+muv <- as.numeric(paroptim[1])
+thetav <- as.numeric(paroptim[2])
+sigmav <- as.numeric(paroptim[3])
 
 
 # You should get outputs similar to:
